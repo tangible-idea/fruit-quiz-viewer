@@ -3,9 +3,7 @@
 </script>
 
 <template>
-  <div class="app">
-    <router-view />
-  </div>
+  <router-view />
 </template>
 
 <style>
@@ -22,7 +20,7 @@ body {
   background-color: #f8f9fa;
 }
 
-.app {
+#app {
   min-height: 100vh;
 }
 </style>

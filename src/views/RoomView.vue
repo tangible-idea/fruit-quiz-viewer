@@ -126,11 +126,6 @@ onMounted(() => {
            :style="{
              '--tree-scale': `${Math.min(1 + (getTotalFruits(user) * 0.02), 1.5)}`
            }">
-        <div class="tree-top">
-          <div class="user-name">{{ user.user_name || '이름 없음' }}</div>
-          <div v-if="user.score" class="score-tag">{{ user.score }}점</div>
-        </div>
-        
         <div class="tree">
           <div class="tree-trunk"></div>
           <div class="tree-crown">
@@ -139,14 +134,19 @@ onMounted(() => {
                  class="fruit-item"
                  :style="{
                    '--fruit-color': getFruitColors(fruitItem.fruit),
-                   '--fruit-size': `${Math.min(1 + (fruitItem.count * 0.15), 2.5)}rem`,
-                   '--fruit-left': `${5 + (fruitIndex * 18) % 75}%`,
-                   '--fruit-top': `${10 + ((fruitIndex * 23) % 65)}%`,
+                   '--fruit-size': `${Math.min(25 + (fruitItem.count * 2), 40)}px`,
+                   '--fruit-left': `${20 + Math.random() * 80}px`,
+                   '--fruit-top': `${10 + Math.random() * 80}px`
                  }">
-              <div class="fruit-emoji">{{ fruitItem.fruit }}</div>
-              <div class="fruit-count">{{ fruitItem.count }}</div>
+              <span class="fruit-emoji">{{ fruitItem.fruit }}</span>
+              <span class="fruit-count">{{ fruitItem.count }}</span>
             </div>
           </div>
+        </div>
+        
+        <div class="tree-top">
+          <div class="user-name">{{ user.user_name || '이름 없음' }}</div>
+          <div v-if="user.score" class="score-tag">{{ user.score }}점</div>
         </div>
         
         <div class="tree-info">
@@ -154,22 +154,21 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    
-    <div class="back-button">
-      <router-link to="/">← 농장으로 돌아가기</router-link>
-    </div>
   </div>
 </template>
 
 <style scoped>
 .farm-view {
   max-width: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
   background-color: #e8f5e9;
   min-height: 100vh;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .farm-header {
@@ -181,6 +180,7 @@ onMounted(() => {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   max-width: 100%;
   overflow: hidden;
+  z-index: 10;
 }
 
 h1 {
@@ -234,14 +234,19 @@ h1 {
   flex-direction: row;
   overflow-x: auto;
   justify-content: flex-start;
-  gap: 0;
-  padding: 0;
+  align-items: center;
+  gap: 30px;
+  padding: 180px 20px 20px 20px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #4caf50 transparent;
   width: 100%;
   max-width: 100vw;
   margin: 0;
+  flex: 1;
+  position: relative;
+  top: -180px;
+  min-height: 400px;
 }
 
 .farm-container::-webkit-scrollbar {
@@ -270,64 +275,23 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0;
-  flex: 0 0 140px;
-  min-width: 140px;
+  justify-content: center;
+  padding: 0 15px;
+  flex: 0 0 160px;
+  min-width: 160px;
   transition: transform 0.3s;
   transform: scale(var(--tree-scale, 1));
   position: relative;
   margin: 0;
+  height: 300px;
 }
 
 @media (min-width: 640px) {
   .tree-container {
-    flex: 0 0 200px;
-    min-width: 200px;
+    flex: 0 0 220px;
+    min-width: 220px;
     margin-bottom: 2rem;
   }
-}
-
-.tree-top {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  margin: 0;
-  position: relative;
-  background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 0;
-  padding: 0.4rem 0.7rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(2px);
-  z-index: 5;
-}
-
-.user-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #1b5e20;
-  text-align: center;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.score-tag {
-  position: absolute;
-  right: -8px;
-  top: -8px;
-  background-color: #f57f17;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: bold;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .tree {
@@ -336,6 +300,7 @@ h1 {
   height: 180px;
   margin: 0;
   transition: transform 0.2s;
+  order: 1;
 }
 
 .tree:hover {
@@ -360,7 +325,7 @@ h1 {
   left: 50%;
   transform: translateX(-50%);
   width: 130px;
-  height: 145px;
+  height: 130px;
   background: radial-gradient(circle at center, #a5d6a7 10%, #81c784 60%, #66bb6a 100%);
   border-radius: 70% 70% 60% 60%;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -412,39 +377,62 @@ h1 {
   z-index: 3;
 }
 
+.tree-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0 0 10px 0;
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  padding: 0.4rem 0.7rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+  z-index: 5;
+  order: 0;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1b5e20;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score-tag {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  background-color: #f57f17;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
 .tree-info {
   font-size: 0.8rem;
   color: #33691e;
   text-align: center;
   font-weight: 600;
-  background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
   padding: 0.3rem 0.6rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(2px);
   z-index: 5;
-  margin: 0;
-}
-
-.back-button {
-  margin: 0;
-  text-align: center;
-}
-
-.back-button a {
-  display: inline-block;
-  padding: 0.5rem 1.2rem;
-  background-color: #43a047;
-  color: white;
-  text-decoration: none;
-  border-radius: 50px;
-  font-weight: 600;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s, transform 0.2s;
-}
-
-.back-button a:hover {
-  background-color: #2e7d32;
-  transform: translateY(-2px);
+  margin: 5px 0 0 0;
+  order: 2;
 }
 </style>
