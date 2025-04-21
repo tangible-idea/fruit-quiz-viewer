@@ -121,7 +121,11 @@ onMounted(() => {
     </div>
     
     <div v-else class="farm-container">
-      <div v-for="user in users" :key="user.id" class="tree-container">
+      <div v-for="user in users" :key="user.id" 
+           class="tree-container"
+           :style="{
+             '--tree-scale': `${Math.min(1 + (getTotalFruits(user) * 0.02), 1.5)}`
+           }">
         <div class="tree-top">
           <div class="user-name">{{ user.user_name || '이름 없음' }}</div>
           <div v-if="user.score" class="score-tag">{{ user.score }}점</div>
@@ -160,28 +164,38 @@ onMounted(() => {
 <style scoped>
 .farm-view {
   max-width: 100%;
-  margin: 0 auto;
-  padding: 1rem;
+  margin: 0;
+  padding: 0;
   background-color: #e8f5e9;
-  background-image: linear-gradient(#c8e6c9 1px, transparent 1px),
-                    linear-gradient(90deg, #c8e6c9 1px, transparent 1px);
-  background-size: 20px 20px;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
 
 .farm-header {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin: 0;
   background-color: rgba(255, 255, 255, 0.7);
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 0.5rem;
+  border-radius: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 h1 {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: #2e7d32;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 640px) {
+  h1 {
+    font-size: 1.5rem;
+  }
 }
 
 .loading, .error, .empty {
@@ -192,10 +206,9 @@ h1 {
   min-height: 200px;
   text-align: center;
   background-color: rgba(255, 255, 255, 0.7);
-  padding: 2rem;
-  border-radius: 8px;
-  margin: 1rem 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 0;
+  border-radius: 0;
+  margin: 0;
 }
 
 .loader {
@@ -217,16 +230,39 @@ h1 {
 }
 
 .farm-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
-  justify-content: center;
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #4caf50 transparent;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+}
+
+.farm-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.farm-container::-webkit-scrollbar-thumb {
+  background-color: #4caf50;
+  border-radius: 10px;
+}
+
+.farm-container::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 @media (min-width: 640px) {
   .farm-container {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3rem;
+    padding: 2rem;
   }
 }
 
@@ -234,15 +270,21 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s;
+  padding: 0;
+  flex: 0 0 140px;
+  min-width: 140px;
+  transition: transform 0.3s;
+  transform: scale(var(--tree-scale, 1));
+  position: relative;
+  margin: 0;
 }
 
-.tree-container:hover {
-  transform: translateY(-5px);
+@media (min-width: 640px) {
+  .tree-container {
+    flex: 0 0 200px;
+    min-width: 200px;
+    margin-bottom: 2rem;
+  }
 }
 
 .tree-top {
@@ -250,8 +292,14 @@ h1 {
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin-bottom: 0.5rem;
+  margin: 0;
   position: relative;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 0;
+  padding: 0.4rem 0.7rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+  z-index: 5;
 }
 
 .user-name {
@@ -286,7 +334,12 @@ h1 {
   position: relative;
   width: 100%;
   height: 180px;
-  margin-bottom: 0.5rem;
+  margin: 0;
+  transition: transform 0.2s;
+}
+
+.tree:hover {
+  transform: translateY(-5px);
 }
 
 .tree-trunk {
@@ -294,21 +347,23 @@ h1 {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 20px;
-  height: 50px;
-  background-color: #795548;
-  border-radius: 0 0 5px 5px;
+  width: 22px;
+  height: 60px;
+  background: linear-gradient(to bottom, #8d6e63, #5d4037);
+  border-radius: 5px 5px 8px 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tree-crown {
   position: absolute;
-  bottom: 45px;
+  bottom: 50px;
   left: 50%;
   transform: translateX(-50%);
-  width: 120px;
-  height: 135px;
-  background-color: #81c784;
+  width: 130px;
+  height: 145px;
+  background: radial-gradient(circle at center, #a5d6a7 10%, #81c784 60%, #66bb6a 100%);
   border-radius: 70% 70% 60% 60%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   z-index: 0;
 }
 
@@ -359,13 +414,20 @@ h1 {
 
 .tree-info {
   font-size: 0.8rem;
-  color: #558b2f;
+  color: #33691e;
   text-align: center;
   font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 0;
+  padding: 0.3rem 0.6rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+  z-index: 5;
+  margin: 0;
 }
 
 .back-button {
-  margin-top: 2rem;
+  margin: 0;
   text-align: center;
 }
 
