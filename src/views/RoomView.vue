@@ -21,7 +21,8 @@ const fetchUserData = async () => {
       
     if (supabaseError) throw supabaseError
     
-    users.value = data || []
+    // 점수에 따라 정렬된 사용자 배열
+    users.value = data ? data.sort((a, b) => (b.score || 0) - (a.score || 0)) : []
     console.log('Fetched users:', users.value)
   } catch (err) {
     console.error('Error fetching data:', err)
@@ -29,6 +30,13 @@ const fetchUserData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// 사용자의 순위 계산
+const getUserRank = (user) => {
+  if (!users.value.length) return '-'
+  const index = users.value.findIndex(u => u.id === user.id)
+  return index !== -1 ? index + 1 : '-'
 }
 
 const parseFruitEmojis = (fruitText) => {
@@ -146,7 +154,7 @@ onMounted(() => {
         
         <div class="tree-top">
           <div class="user-name">{{ user.user_name || '이름 없음' }}</div>
-          <div v-if="user.score" class="score-tag">{{ user.score }}점</div>
+          <div v-if="user.score !== undefined" class="score-tag">{{ getUserRank(user) }}위</div>
         </div>
         
         <div class="tree-info">
