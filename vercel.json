@@ -1,1 +1,11 @@
-줘ㅈ
+{
+  "routes": [
+    { "src": "/room/[^/]+", "dest": "/" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/" }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ],
+  "trailingSlash": false
+}
