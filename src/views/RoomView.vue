@@ -36,10 +36,14 @@
           </div>
           
           <div class="fridge-interior">
+            <div class="fridge-light"></div>
             <div v-for="(fruitItem, fruitIndex) in getFruitCounts(user)" 
                  :key="fruitIndex" 
                  class="fruit-item"
-                 :class="{ 'fruit-animate': activeFruitAnimation && activeFruitAnimation.userId === user.id }"
+                 :class="{ 
+                   'fruit-active': openFridges[user.id],
+                   'fruit-animate': activeFruitAnimation && activeFruitAnimation.userId === user.id 
+                 }"
                  :style="{
                    '--fruit-color': getFruitColors(fruitItem.fruit),
                    '--fruit-size': `${Math.min(25 + (fruitItem.count * 2), 40)}px`,
@@ -120,7 +124,7 @@ const fetchRoomTitle = async () => {
     
     // 가져온 데이터가 있으면 방 제목을 설정합니다. 없으면 기본 제목을 설정합니다.
     if (data && data.room_title) {
-      roomTitle.value = `🧊 ${data.room_title} 🧊`
+      roomTitle.value = `🧊 ${data.room_title}  🧊`
     } else {
       roomTitle.value = `🧊 ${roomId.value} 냉장고 🧊`
     }
@@ -575,6 +579,34 @@ h1 {
   overflow: hidden;
 }
 
+/* 냉장고 조명 효과 */
+.fridge-light {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fridge-open .fridge-light {
+  opacity: 1;
+  animation: fridge-light-flicker 0.5s ease-in-out;
+}
+
+@keyframes fridge-light-flicker {
+  0% { opacity: 0; }
+  20% { opacity: 0.4; }
+  40% { opacity: 0.2; }
+  60% { opacity: 0.6; }
+  80% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
 /* 냉장고 선반 효과 */
 .fridge-interior::before,
 .fridge-interior::after {
@@ -609,6 +641,15 @@ h1 {
   z-index: 1;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.fruit-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+  transition-delay: calc(0.05s * var(--fruit-index, 0) + 0.2s);
 }
 
 .fruit-item:hover {
@@ -641,22 +682,15 @@ h1 {
 }
 
 .fruit-animate {
-  animation: animate var(--animation-duration) linear forwards;
-  animation-delay: var(--animation-delay);
+  animation: fruit-hover 0.8s ease-in-out infinite alternate;
 }
 
-@keyframes animate {
+@keyframes fruit-hover {
   0% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.2) translateY(-15px);
-    opacity: 1;
+    transform: translateY(0);
   }
   100% {
-    transform: scale(1) translateY(-30px) translateX(var(--fly-distance)) rotate(var(--fly-direction));
-    opacity: 0;
+    transform: translateY(-8px);
   }
 }
 
