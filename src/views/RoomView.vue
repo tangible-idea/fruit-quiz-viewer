@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../lib/supabaseClient'
 
@@ -8,6 +8,7 @@ const roomId = computed(() => route.params.roomId)
 const users = ref([])
 const loading = ref(true)
 const error = ref(null)
+const horizontalScrollContainer = ref(null)
 
 const fetchUserData = async () => {
   try {
@@ -38,6 +39,85 @@ const getUserRank = (user) => {
   const index = users.value.findIndex(u => u.id === user.id)
   return index !== -1 ? index + 1 : '-'
 }
+
+// 세로 스크롤을 가로 스크롤로 변환하는 함수
+const handleVerticalScroll = (event) => {
+  if (horizontalScrollContainer.value) {
+    // 모바일 장치에서만 적용
+    if (window.innerWidth <= 768) {
+      event.preventDefault()
+      horizontalScrollContainer.value.scrollLeft += event.deltaY
+    }
+  }
+}
+
+// 터치 이벤트에 대한 처리 추가
+let startY = 0
+let startX = 0
+let lastY = 0
+let isScrolling = false
+
+const handleTouchStart = (e) => {
+  if (window.innerWidth > 768) return
+  startY = e.touches[0].clientY
+  startX = e.touches[0].clientX
+  lastY = startY
+  isScrolling = false
+}
+
+const handleTouchMove = (e) => {
+  if (!horizontalScrollContainer.value || window.innerWidth > 768) return
+  
+  const currentY = e.touches[0].clientY
+  const currentX = e.touches[0].clientX
+  
+  // Y축 변화량이 X축보다 크면 (세로 스크롤 의도)
+  if (!isScrolling) {
+    isScrolling = Math.abs(currentY - startY) > Math.abs(currentX - startX)
+  }
+  
+  if (isScrolling) {
+    // 세로 스크롤 방지
+    e.preventDefault()
+    
+    // 세로 스크롤 양 계산
+    const moveY = lastY - currentY
+    
+    // 가로 스크롤 이동 (속도 조절 가능)
+    horizontalScrollContainer.value.scrollLeft += moveY * 3
+    
+    // 마지막 스크롤 위치 저장
+    lastY = currentY
+  }
+}
+
+const handleTouchEnd = () => {
+  isScrolling = false
+}
+
+onMounted(() => {
+  fetchUserData()
+  
+  // 세로 스크롤을 가로 스크롤로 변환하는 이벤트 리스너 추가
+  window.addEventListener('wheel', handleVerticalScroll, { passive: false })
+  
+  // 터치 이벤트에 대한 처리 추가
+  if (typeof window !== 'undefined') {
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd, { passive: true })
+  }
+  
+  // 언마운트 시 이벤트 리스너 제거를 위해 함수 저장
+  onBeforeUnmount(() => {
+    window.removeEventListener('wheel', handleVerticalScroll)
+    if (typeof window !== 'undefined') {
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+  })
+})
 
 const parseFruitEmojis = (fruitText) => {
   if (!fruitText) return { heartCount: 0, fruits: [] }
@@ -104,9 +184,6 @@ const getFruitColors = (fruit) => {
   return colorMap[fruit] || '#3498db' // 기본색상
 }
 
-onMounted(() => {
-  fetchUserData()
-})
 </script>
 
 <template>
@@ -128,7 +205,7 @@ onMounted(() => {
       <p>이 농장에는 아직 나무가 심어지지 않았어요.</p>
     </div>
     
-    <div v-else class="farm-container">
+    <div v-else class="farm-container" ref="horizontalScrollContainer">
       <div v-for="user in users" :key="user.id" 
            class="tree-container"
            :style="{
@@ -255,27 +332,26 @@ h1 {
   position: relative;
   top: -180px;
   min-height: 400px;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+  touch-action: pan-x;
 }
 
-.farm-container::-webkit-scrollbar {
-  height: 8px;
-}
-
-.farm-container::-webkit-scrollbar-thumb {
-  background-color: #4caf50;
-  border-radius: 10px;
-}
-
-.farm-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-@media (min-width: 640px) {
+/* 모바일에서 스크롤바 숨기기 */
+@media (max-width: 768px) {
   .farm-container {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 3rem;
-    padding: 2rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overflow-y: hidden;
+  }
+  
+  .farm-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .farm-view {
+    overflow: hidden;
+    touch-action: none;
   }
 }
 
