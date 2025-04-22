@@ -1,7 +1,7 @@
 <template>
   <div class="farm-view">
     <div class="farm-header">
-      <h1>🌳 농장 {{ roomId }} 과일 나무 🌳</h1>
+      <h1>{{ roomTitle }}</h1>
     </div>
     
     <div v-if="loading" class="loading">
@@ -72,6 +72,35 @@ const horizontalScrollContainer = ref(null)
 const activeFruitAnimation = ref(null)
 // 과일 위치를 저장하는 맵 추가
 const fruitPositions = ref({})
+// 방 제목을 저장하는 변수 추가
+const roomTitle = ref('')
+
+const fetchRoomTitle = async () => {
+  try {
+    // kakao_room 테이블에서 room_tag가 roomId인 room_title을 가져옵니다.
+    const { data, error: supabaseError } = await supabase
+      .from('kakao_room')
+      .select('room_title')
+      .eq('room_tag', roomId.value)
+      .single()
+    
+    if (supabaseError) {
+      console.error('Error fetching room title:', supabaseError)
+      roomTitle.value = `🌳 방제목 없음 ${roomId.value} 🌳`
+      return
+    }
+    
+    // 가져온 데이터가 있으면 방 제목을 설정합니다. 없으면 기본 제목을 설정합니다.
+    if (data && data.room_title) {
+      roomTitle.value = `🌳 ${data.room_title} 🌳`
+    } else {
+      roomTitle.value = `🌳 방제목 없음 ${roomId.value} 🌳`
+    }
+  } catch (err) {
+    console.error('Error in fetchRoomTitle:', err)
+    roomTitle.value = `🌳 방제목 없음 ${roomId.value} 🌳`
+  }
+}
 
 const fetchUserData = async () => {
   try {
@@ -159,6 +188,7 @@ const handleTouchEnd = () => {
 }
 
 onMounted(() => {
+  fetchRoomTitle() // 방 제목 가져오기
   fetchUserData()
   
   // 세로 스크롤을 가로 스크롤로 변환하는 이벤트 리스너 추가
