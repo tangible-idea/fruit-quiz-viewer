@@ -124,7 +124,7 @@ const fetchRoomTitle = async () => {
     
     // 가져온 데이터가 있으면 방 제목을 설정합니다. 없으면 기본 제목을 설정합니다.
     if (data && data.room_title) {
-      roomTitle.value = `🧊 ${data.room_title}  🧊`
+      roomTitle.value = `🧊 ${data.room_title} 냉장고 🧊`
     } else {
       roomTitle.value = `🧊 ${roomId.value} 냉장고 🧊`
     }
