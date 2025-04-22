@@ -1,3 +1,62 @@
+<template>
+  <div class="farm-view">
+    <div class="farm-header">
+      <h1>🌳 농장 {{ roomId }} 과일 나무 🌳</h1>
+    </div>
+    
+    <div v-if="loading" class="loading">
+      <div class="loader"></div>
+      <p>나무에서 과일을 수확하는 중...</p>
+    </div>
+    
+    <div v-else-if="error" class="error">
+      {{ error }}
+    </div>
+    
+    <div v-else-if="users.length === 0" class="empty">
+      <p>이 농장에는 아직 나무가 심어지지 않았어요.</p>
+    </div>
+    
+    <div v-else class="farm-container" ref="horizontalScrollContainer">
+      <div v-for="user in users" :key="user.id" 
+           class="tree-container"
+           :style="{
+             '--tree-scale': `${Math.min(1 + (getTotalFruits(user) * 0.02), 1.5)}`
+           }"
+           @click="triggerFruitAnimation(user.id)">
+        
+        <div class="tree">
+          <div class="tree-trunk"></div>
+          <div class="tree-crown">
+            <!-- 과일 애니메이션 -->
+            <div v-for="(fruitItem, fruitIndex) in getFruitCounts(user)" 
+                 :key="fruitIndex" 
+                 class="fruit-item"
+                 :class="{ 'fruit-animate': activeFruitAnimation && activeFruitAnimation.userId === user.id }"
+                 :style="{
+                   '--fruit-color': getFruitColors(fruitItem.fruit),
+                   '--fruit-size': `${Math.min(25 + (fruitItem.count * 2), 40)}px`,
+                   ...getFruitPosition(user.id, fruitIndex)
+                 }">
+              <span class="fruit-emoji">{{ fruitItem.fruit }}</span>
+              <span class="fruit-count">{{ fruitItem.count }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tree-top">
+          <div class="user-name">{{ user.user_name || '이름 없음' }}</div>
+          <div v-if="user.score !== undefined" class="score-tag">{{ getUserRank(user) }}위</div>
+        </div>
+        
+        <div class="tree-info">
+          <span>총 {{ getTotalFruits(user) }}개의 과일</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
@@ -9,6 +68,10 @@ const users = ref([])
 const loading = ref(true)
 const error = ref(null)
 const horizontalScrollContainer = ref(null)
+// 과일 애니메이션을 위한 상태
+const activeFruitAnimation = ref(null)
+// 과일 위치를 저장하는 맵 추가
+const fruitPositions = ref({})
 
 const fetchUserData = async () => {
   try {
@@ -184,63 +247,46 @@ const getFruitColors = (fruit) => {
   return colorMap[fruit] || '#3498db' // 기본색상
 }
 
-</script>
+// 과일 위치 계산 함수 - 처음 한 번만 계산하고 저장
+const getFruitPosition = (userId, fruitIndex) => {
+  const key = `${userId}-${fruitIndex}`
+  
+  // 이미 위치가 계산되어 있다면 그대로 반환
+  if (fruitPositions.value[key]) {
+    return fruitPositions.value[key]
+  }
+  
+  // 새로운 위치 계산 및 저장
+  const position = {
+    left: `${20 + Math.random() * 80}px`,
+    top: `${10 + Math.random() * 80}px`,
+    delay: `${Math.random() * 0.5}s`,
+    duration: `${0.5 + Math.random() * 1}s`,
+    distance: `${50 + Math.random() * 100}px`,
+    direction: `${-150 + Math.random() * 300}deg`
+  }
+  
+  fruitPositions.value[key] = position
+  return position
+}
 
-<template>
-  <div class="farm-view">
-    <div class="farm-header">
-      <h1>🌳 농장 {{ roomId }} 과일 나무 🌳</h1>
-    </div>
+// 과일 날아가는 애니메이션 트리거 함수
+const triggerFruitAnimation = (userId) => {
+  // 현재 사용자의 순위 가져오기
+  const userIndex = users.value.findIndex(u => u.id === userId)
+  
+  // 1위, 2위, 3위만 애니메이션 활성화
+  if (userIndex >= 0 && userIndex < 3) {
+    activeFruitAnimation.value = { userId, rank: userIndex + 1 }
     
-    <div v-if="loading" class="loading">
-      <div class="loader"></div>
-      <p>나무에서 과일을 수확하는 중...</p>
-    </div>
-    
-    <div v-else-if="error" class="error">
-      {{ error }}
-    </div>
-    
-    <div v-else-if="users.length === 0" class="empty">
-      <p>이 농장에는 아직 나무가 심어지지 않았어요.</p>
-    </div>
-    
-    <div v-else class="farm-container" ref="horizontalScrollContainer">
-      <div v-for="user in users" :key="user.id" 
-           class="tree-container"
-           :style="{
-             '--tree-scale': `${Math.min(1 + (getTotalFruits(user) * 0.02), 1.5)}`
-           }">
-        <div class="tree">
-          <div class="tree-trunk"></div>
-          <div class="tree-crown">
-            <div v-for="(fruitItem, fruitIndex) in getFruitCounts(user)" 
-                 :key="fruitIndex" 
-                 class="fruit-item"
-                 :style="{
-                   '--fruit-color': getFruitColors(fruitItem.fruit),
-                   '--fruit-size': `${Math.min(25 + (fruitItem.count * 2), 40)}px`,
-                   '--fruit-left': `${20 + Math.random() * 80}px`,
-                   '--fruit-top': `${10 + Math.random() * 80}px`
-                 }">
-              <span class="fruit-emoji">{{ fruitItem.fruit }}</span>
-              <span class="fruit-count">{{ fruitItem.count }}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="tree-top">
-          <div class="user-name">{{ user.user_name || '이름 없음' }}</div>
-          <div v-if="user.score !== undefined" class="score-tag">{{ getUserRank(user) }}위</div>
-        </div>
-        
-        <div class="tree-info">
-          <span>총 {{ getTotalFruits(user) }}개의 과일</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
+    // 애니메이션이 끝나면 상태 초기화
+    setTimeout(() => {
+      activeFruitAnimation.value = null
+    }, 1500)
+  }
+}
+
+</script>
 
 <style scoped>
 .farm-view {
@@ -518,5 +564,23 @@ h1 {
   z-index: 5;
   margin: 5px 0 0 0;
   order: 2;
+}
+
+.fruit-animate {
+  animation: animate var(--animation-duration) linear forwards;
+  animation-delay: var(--animation-delay);
+}
+
+@keyframes animate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1) translate(var(--fly-distance), -30px) rotate(var(--fly-direction));
+    opacity: 0;
+  }
 }
 </style>
