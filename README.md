@@ -1,4 +1,4 @@
-# 과일 퀴즈 점수 보기 (Fruit Quiz Viewer)
+## 과일 퀴즈 점수 보기 (Fruit Quiz Viewer)
 
 과일 퀴즈 점수를 방 ID(room_id)별로 확인할 수 있는 Vue.js 3 웹 애플리케이션입니다.
 
