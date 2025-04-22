@@ -14,7 +14,7 @@ const goToRoom = () => {
 
 <template>
   <div class="home">
-    <h1>과일 퀴즈 점수 보기</h1>
+    <h2>Fruits</h2>
     <div class="input-container">
       <input 
         v-model="roomId" 
